@@ -6,9 +6,8 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.theokanning.openai.service.OpenAiService;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,7 @@ import java.time.Duration;
 
 public class AppConfig {
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
-    private static final String ES_HOST = "ai-assistants-ffcafb.es.us-east-1.aws.elastic.cloud";
+    private static final String ES_HOST = System.getenv("ES_HOST");
     private static final int ES_PORT = 443;
     private static final String ES_SCHEME = "https";
 
@@ -35,15 +34,15 @@ public class AppConfig {
             if (apiKey == null || apiKey.isEmpty()) {
                 throw new IllegalStateException("ES_API_KEY environment variable is not set");
             }
+            if (ES_HOST == null || ES_HOST.isEmpty()) {
+                throw new IllegalStateException("ES_HOST environment variable is not set");
+            }
 
             // Create the low-level client
             RestClient restClient = RestClient.builder(
                     new HttpHost(ES_HOST, ES_PORT, ES_SCHEME))
-                    .setHttpClientConfigCallback(httpClientBuilder -> {
-                        BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                        credentialsProvider.setCredentials(AuthScope.ANY,
-                                new UsernamePasswordCredentials("elastic", apiKey));
-                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    .setDefaultHeaders(new BasicHeader[]{
+                            new BasicHeader("Authorization", "ApiKey " + apiKey)
                     })
                     .build();
 

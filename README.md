@@ -6,7 +6,7 @@ This Java application provides an AI assistant that combines Elasticsearch vecto
 
 - Java 17 or higher
 - Maven 3.6 or higher
-- Elasticsearch API key
+- Elasticsearch Cloud deployment (with API key and endpoint)
 - OpenAI API key
 
 ## Setup
@@ -22,11 +22,15 @@ cd ai-assistant
 touch .env
 ```
 
-3. Add your API keys to the `.env` file:
+3. Add your API keys and Elasticsearch host to the `.env` file:
 ```bash
+ES_HOST=your-elasticsearch-host
 ES_API_KEY=your-elasticsearch-api-key
 OPENAI_API_KEY=your-openai-api-key
 ```
+- `ES_HOST` should be your Elasticsearch Cloud endpoint (e.g. `ai-assistants-xxxxxx.es.us-east-1.aws.elastic.cloud`)
+- `ES_API_KEY` is your Elasticsearch Cloud API key (not a password)
+- `OPENAI_API_KEY` is your OpenAI API key
 
 4. Load the environment variables:
 ```bash
@@ -57,6 +61,11 @@ Run the application using:
 java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 ```
 
+Or, if you want to pass environment variables inline (recommended for one-off runs):
+```bash
+ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API_KEY=your-openai-api-key java -jar target/ai-assistant-1.0-SNAPSHOT.jar
+```
+
 ## Usage
 
 1. Start the application
@@ -65,11 +74,19 @@ java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 
 ## Features
 
-- Elasticsearch integration for semantic search
+- Elasticsearch integration for semantic search (using API key authentication)
 - OpenAI GPT-3.5 Turbo integration for natural language processing
 - Context-aware responses based on search results
 - Professional and technical response formatting
 - Error handling and logging
+
+## Troubleshooting
+
+- **Elasticsearch authentication errors:**
+    - Ensure you are using an API key (not a password) for `ES_API_KEY`.
+    - Make sure `ES_HOST` is set to your Elasticsearch Cloud endpoint (without protocol, e.g. `ai-assistants-xxxxxx.es.us-east-1.aws.elastic.cloud`).
+    - The application uses the API key in the `Authorization: ApiKey ...` header, not as a username/password.
+    - If you see `unable to authenticate user [elastic]`, double-check your `.env` values and restart your shell or reload the environment variables.
 
 ## Project Structure
 
