@@ -22,11 +22,11 @@ cd ai-assistant
 touch .env
 ```
 
-3. Add your API keys and Elasticsearch host to the `.env` file:
+3. Add your API keys and Elasticsearch host to the `.env` file. **Make sure to use `export` for each variable**:
 ```bash
-ES_HOST=your-elasticsearch-host
-ES_API_KEY=your-elasticsearch-api-key
-OPENAI_API_KEY=your-openai-api-key
+export ES_HOST=your-elasticsearch-host
+export ES_API_KEY=your-elasticsearch-api-key
+export OPENAI_API_KEY=your-openai-api-key
 ```
 - `ES_HOST` should be your Elasticsearch Cloud endpoint (e.g. `ai-assistants-xxxxxx.es.us-east-1.aws.elastic.cloud`)
 - `ES_API_KEY` is your Elasticsearch Cloud API key (not a password)
@@ -39,7 +39,7 @@ source .env
 
 # For Windows (PowerShell)
 Get-Content .env | ForEach-Object {
-    if ($_ -match '^([^=]+)=(.*)$') {
+    if ($_ -match '^export ([^=]+)=(.*)$') {
         $name = $matches[1]
         $value = $matches[2]
         [Environment]::SetEnvironmentVariable($name, $value, 'Process')
@@ -87,6 +87,7 @@ ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API
     - Make sure `ES_HOST` is set to your Elasticsearch Cloud endpoint (without protocol, e.g. `ai-assistants-xxxxxx.es.us-east-1.aws.elastic.cloud`).
     - The application uses the API key in the `Authorization: ApiKey ...` header, not as a username/password.
     - If you see `unable to authenticate user [elastic]`, double-check your `.env` values and restart your shell or reload the environment variables.
+    - **If you see `ES_API_KEY environment variable is not set`, ensure your `.env` file uses `export` for each variable and that you run `source .env` before starting the app.**
 
 ## Project Structure
 
