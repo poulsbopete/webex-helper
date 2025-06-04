@@ -17,10 +17,30 @@ git clone <repository-url>
 cd ai-assistant
 ```
 
-2. Set up environment variables:
+2. Create a `.env` file in the project root directory:
 ```bash
-export ES_API_KEY="your-elasticsearch-api-key"
-export OPENAI_API_KEY="your-openai-api-key"
+touch .env
+```
+
+3. Add your API keys to the `.env` file:
+```bash
+ES_API_KEY=your-elasticsearch-api-key
+OPENAI_API_KEY=your-openai-api-key
+```
+
+4. Load the environment variables:
+```bash
+# For Linux/Mac
+source .env
+
+# For Windows (PowerShell)
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^([^=]+)=(.*)$') {
+        $name = $matches[1]
+        $value = $matches[2]
+        [Environment]::SetEnvironmentVariable($name, $value, 'Process')
+    }
+}
 ```
 
 ## Building the Application
@@ -56,6 +76,8 @@ java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 - `src/main/java/com/webex/helper/config/AppConfig.java` - Configuration and client initialization
 - `src/main/java/com/webex/helper/service/AIAssistantService.java` - Main service logic
 - `src/main/java/com/webex/helper/Main.java` - Application entry point
+- `.env` - Environment variables file (not tracked in git)
+- `.gitignore` - Git ignore rules for sensitive and generated files
 
 ## Dependencies
 
@@ -63,6 +85,12 @@ java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 - OpenAI Java Client
 - Jackson for JSON processing
 - SLF4J for logging
+
+## Security Notes
+
+- The `.env` file is included in `.gitignore` to prevent accidental commit of sensitive information
+- Never commit your actual API keys to version control
+- Keep your `.env` file secure and don't share it publicly
 
 ## License
 
