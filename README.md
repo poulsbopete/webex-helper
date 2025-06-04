@@ -112,4 +112,4 @@ ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API
 
 ## License
 
-[Your License Here] 
+MIT
