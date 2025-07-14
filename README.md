@@ -116,4 +116,4 @@ The application uses Elasticsearch's semantic search capabilities to:
 
 ## License
 
-[Your License Here] 
+MIT
