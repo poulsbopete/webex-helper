@@ -1,13 +1,12 @@
-# AI Assistant Java Application
+# Webex AI Assistant Java Application
 
-This Java application provides an AI assistant that combines Elasticsearch vector database capabilities with OpenAI's GPT model to provide intelligent responses to user queries.
+This Java application provides an AI assistant that uses Elasticsearch semantic search capabilities to provide intelligent responses to user queries about Webex documentation.
 
 ## Prerequisites
 
 - Java 17 or higher
 - Maven 3.6 or higher
 - Elasticsearch Cloud deployment (with API key and endpoint)
-- OpenAI API key
 
 ## Setup
 
@@ -22,15 +21,13 @@ cd ai-assistant
 touch .env
 ```
 
-3. Add your API keys and Elasticsearch host to the `.env` file. **Make sure to use `export` for each variable**:
+3. Add your Elasticsearch configuration to the `.env` file. **Make sure to use `export` for each variable**:
 ```bash
 export ES_HOST=your-elasticsearch-host
 export ES_API_KEY=your-elasticsearch-api-key
-export OPENAI_API_KEY=your-openai-api-key
 ```
 - `ES_HOST` should be your Elasticsearch Cloud endpoint (e.g. `ai-assistants-xxxxxx.es.us-east-1.aws.elastic.cloud`)
 - `ES_API_KEY` is your Elasticsearch Cloud API key (not a password)
-- `OPENAI_API_KEY` is your OpenAI API key
 
 4. Load the environment variables:
 ```bash
@@ -63,22 +60,30 @@ java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 
 Or, if you want to pass environment variables inline (recommended for one-off runs):
 ```bash
-ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API_KEY=your-openai-api-key java -jar target/ai-assistant-1.0-SNAPSHOT.jar
+ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key java -jar target/ai-assistant-1.0-SNAPSHOT.jar
 ```
 
 ## Usage
 
 1. Start the application
-2. Enter your questions when prompted
+2. Enter your questions about Webex when prompted
 3. Type 'exit' to quit the application
 
 ## Features
 
-- Elasticsearch integration for semantic search (using API key authentication)
-- OpenAI GPT-3.5 Turbo integration for natural language processing
-- Context-aware responses based on search results
-- Professional and technical response formatting
+- Elasticsearch semantic search integration for intelligent document retrieval
+- Multi-field search across title, body, headings, and semantic text
+- Highlighted search results with relevant content snippets
+- Professional response formatting with source citations
 - Error handling and logging
+
+## How It Works
+
+The application uses Elasticsearch's semantic search capabilities to:
+1. Search across multiple fields (title, body, headings, semantic_text)
+2. Use boolean queries to combine semantic and keyword matching
+3. Return highlighted results with relevant content
+4. Format responses with source information and URLs
 
 ## Troubleshooting
 
@@ -91,8 +96,8 @@ ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API
 
 ## Project Structure
 
-- `src/main/java/com/webex/helper/config/AppConfig.java` - Configuration and client initialization
-- `src/main/java/com/webex/helper/service/AIAssistantService.java` - Main service logic
+- `src/main/java/com/webex/helper/config/AppConfig.java` - Configuration and Elasticsearch client initialization
+- `src/main/java/com/webex/helper/service/AIAssistantService.java` - Main service logic with semantic search
 - `src/main/java/com/webex/helper/Main.java` - Application entry point
 - `.env` - Environment variables file (not tracked in git)
 - `.gitignore` - Git ignore rules for sensitive and generated files
@@ -100,7 +105,6 @@ ES_HOST=your-elasticsearch-host ES_API_KEY=your-elasticsearch-api-key OPENAI_API
 ## Dependencies
 
 - Elasticsearch Java Client
-- OpenAI Java Client
 - Jackson for JSON processing
 - SLF4J for logging
 

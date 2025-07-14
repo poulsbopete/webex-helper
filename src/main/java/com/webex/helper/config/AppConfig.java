@@ -4,15 +4,12 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import com.theokanning.openai.service.OpenAiService;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
 
 public class AppConfig {
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
@@ -21,11 +18,9 @@ public class AppConfig {
     private static final String ES_SCHEME = "https";
 
     private final ElasticsearchClient esClient;
-    private final OpenAiService openAiService;
 
     public AppConfig() {
         this.esClient = createElasticsearchClient();
-        this.openAiService = createOpenAiService();
     }
 
     private ElasticsearchClient createElasticsearchClient() {
@@ -58,24 +53,7 @@ public class AppConfig {
         }
     }
 
-    private OpenAiService createOpenAiService() {
-        try {
-            String apiKey = System.getenv("OPENAI_API_KEY");
-            if (apiKey == null || apiKey.isEmpty()) {
-                throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
-            }
-            return new OpenAiService(apiKey, Duration.ofSeconds(30));
-        } catch (Exception e) {
-            logger.error("Failed to create OpenAI service", e);
-            throw new RuntimeException("Failed to create OpenAI service", e);
-        }
-    }
-
     public ElasticsearchClient getEsClient() {
         return esClient;
-    }
-
-    public OpenAiService getOpenAiService() {
-        return openAiService;
     }
 } 

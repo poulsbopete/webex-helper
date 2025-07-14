@@ -11,13 +11,13 @@ public class Main {
             // Initialize configuration and services
             AppConfig config = new AppConfig();
             AIAssistantService assistant = new AIAssistantService(
-                    config.getEsClient(),
-                    config.getOpenAiService()
+                    config.getEsClient()
             );
 
             // Create scanner for user input
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Welcome to the AI Assistant! Type 'exit' to quit.");
+            System.out.println("Welcome to the Webex AI Assistant! Type 'exit' to quit.");
+            System.out.println("This assistant uses Elasticsearch semantic search to find relevant information.");
 
             while (true) {
                 System.out.print("\nEnter your question: ");

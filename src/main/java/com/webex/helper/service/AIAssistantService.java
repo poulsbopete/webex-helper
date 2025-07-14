@@ -3,10 +3,6 @@ package com.webex.helper.service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.completion.chat.ChatMessageRole;
-import com.theokanning.openai.service.OpenAiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,23 +16,18 @@ public class AIAssistantService {
     private static final int MAX_RESULTS = 3;
 
     private final ElasticsearchClient esClient;
-    private final OpenAiService openAiService;
 
-    public AIAssistantService(ElasticsearchClient esClient, OpenAiService openAiService) {
+    public AIAssistantService(ElasticsearchClient esClient) {
         this.esClient = esClient;
-        this.openAiService = openAiService;
     }
 
     public String processQuery(String question) {
         try {
-            // Get results from Elasticsearch
+            // Get results from Elasticsearch using enhanced search
             List<Map<String, Object>> searchResults = getElasticsearchResults(question);
             
-            // Create context from search results
-            String context = createContextFromResults(searchResults);
-            
-            // Generate response using OpenAI
-            return generateOpenAIResponse(context, question);
+            // Create response from search results
+            return createResponseFromResults(searchResults, question);
         } catch (Exception e) {
             logger.error("Error processing query", e);
             return "I apologize, but I encountered an error while processing your request.";
@@ -44,13 +35,33 @@ public class AIAssistantService {
     }
 
     private List<Map<String, Object>> getElasticsearchResults(String query) throws Exception {
+        // Create the enhanced search query with multiple field matching
         SearchResponse<Map> response = esClient.search(s -> s
                 .index(INDEX_NAME)
                 .size(MAX_RESULTS)
                 .query(q -> q
-                        .multiMatch(m -> m
-                                .query(query)
-                                .fields("title")
+                        .bool(b -> b
+                                .should(sh -> sh
+                                        .match(m -> m
+                                                .field("semantic_text")
+                                                .query(query)
+                                        )
+                                )
+                                .should(sh -> sh
+                                        .multiMatch(m -> m
+                                                .query(query)
+                                                .fields("body", "headings", "title")
+                                        )
+                                )
+                        )
+                )
+                .highlight(h -> h
+                        .fields("body", f -> f
+                                .numberOfFragments(2)
+                                .fragmentSize(150)
+                        )
+                        .fields("headings", f -> f
+                                .numberOfFragments(1)
                         )
                 ),
                 Map.class
@@ -63,48 +74,48 @@ public class AIAssistantService {
         return results;
     }
 
-    private String createContextFromResults(List<Map<String, Object>> results) {
-        StringBuilder context = new StringBuilder();
-        for (Map<String, Object> result : results) {
-            // Add relevant fields to context
-            if (result.containsKey("title")) {
-                context.append("Title: ").append(result.get("title")).append("\n");
-            }
-            if (result.containsKey("body")) {
-                context.append("Body: ").append(result.get("body")).append("\n");
-            }
-            if (result.containsKey("meta_description")) {
-                context.append("Description: ").append(result.get("meta_description")).append("\n");
-            }
-            context.append("---\n");
+    private String createResponseFromResults(List<Map<String, Object>> results, String question) {
+        if (results.isEmpty()) {
+            return "I couldn't find any relevant information to answer your question about '" + question + "'. Please try rephrasing your question or ask about a different topic.";
         }
-        return context.toString();
-    }
 
-    private String generateOpenAIResponse(String context, String question) {
-        String systemPrompt = """
-            Instructions:
+        StringBuilder response = new StringBuilder();
+        response.append("Based on the search results, here's what I found:\n\n");
+
+        for (int i = 0; i < results.size(); i++) {
+            Map<String, Object> result = results.get(i);
+            response.append("**Result ").append(i + 1).append(":**\n");
             
-            - You are a senior solutions architect at a cloud company. Provide concise, step-by-step technical answers. Prioritize production-safe recommendations. For YAML, JSON, or CLI, output only the relevant snippet. If the answer isn't certain, say so and suggest next steps. Tone: professional, approachable, slightly nerdy.
-            - Answer questions truthfully and factually using only the context presented.
-            - If you don't know the answer, just say that you don't know, don't make up an answer.
-            - You must always cite the document where the answer was extracted using inline academic citation style [], using the position.
-            - Use markdown format for code examples.
-            - You are correct, factual, precise, and reliable.
+            // Add title if available
+            if (result.containsKey("title")) {
+                response.append("**Title:** ").append(result.get("title")).append("\n");
+            }
             
-            Context:
-            """ + context;
+            // Add meta description if available
+            if (result.containsKey("meta_description")) {
+                response.append("**Description:** ").append(result.get("meta_description")).append("\n");
+            }
+            
+            // Add URL if available
+            if (result.containsKey("url")) {
+                response.append("**Source:** ").append(result.get("url")).append("\n");
+            }
+            
+            // Add body content (truncated if too long)
+            if (result.containsKey("body")) {
+                String body = (String) result.get("body");
+                if (body != null && !body.isEmpty()) {
+                    String truncatedBody = body.length() > 300 ? body.substring(0, 300) + "..." : body;
+                    response.append("**Content:** ").append(truncatedBody).append("\n");
+                }
+            }
+            
+            response.append("\n---\n\n");
+        }
 
-        List<ChatMessage> messages = new ArrayList<>();
-        messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
-        messages.add(new ChatMessage(ChatMessageRole.USER.value(), question));
+        response.append("**Note:** These results are based on semantic search through the Webex documentation. ");
+        response.append("For the most up-to-date and detailed information, please refer to the official Webex documentation.");
 
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")
-                .messages(messages)
-                .build();
-
-        return openAiService.createChatCompletion(request)
-                .getChoices().get(0).getMessage().getContent();
+        return response.toString();
     }
 } 
